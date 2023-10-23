@@ -394,11 +394,11 @@ jobs:
 
             if [ -n "${DOCKER_TAG}" ]; then
               echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-              echo ${DOCKERHUB_UTILS_REPO}:${DOCKER_TAG}
+              echo ${DOCKERHUB_REPO_UTILS}:${DOCKER_TAG}
               cd tools/spanner
-              docker build -t ${DOCKERHUB_UTILS_REPO}:${DOCKER_TAG} .
+              docker build -t ${DOCKERHUB_REPO_UTILS}:${DOCKER_TAG} .
               docker images
-              docker push "${DOCKERHUB_UTILS_REPO}:${DOCKER_TAG}"
+              docker push "${DOCKERHUB_REPO_UTILS}:${DOCKER_TAG}"
             else
               echo "Not building or pushing to dockerhub for tag=${CIRCLE_TAG} branch=${CIRCLE_BRANCH}"
             fi
