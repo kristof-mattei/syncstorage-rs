@@ -160,6 +160,9 @@ commands:
           paths:
             - "~/.cache/sccache"
   deploy:
+    parameters:
+      repo:
+        type: string
     steps:
       - run:
           name: Restore Docker image cache
@@ -167,6 +170,7 @@ commands:
       - run:
           name: Deploy to Dockerhub
           command: |
+            export DOCKERHUB_REPO=<<parameters.repo>>
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               DOCKER_TAG="${CIRCLE_SHA1}"
             fi
@@ -346,13 +350,12 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-        environment:
-          DOCKERHUB_REPO: "{{ .Environment.DOCKERHUB_REPO_MYSQL }}"
     steps:
       - setup_remote_docker
       - restore_cache:
           key: mysql-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-      - deploy
+      - deploy:
+          repo: "{{ .Environment.DOCKERHUB_REPO_MYSQL }}"
 
   deploy-spanner:
     docker:
@@ -360,13 +363,12 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-        environment:
-          DOCKERHUB_REPO: "{{ .Environment.DOCKERHUB_REPO_SPANNER }}"
     steps:
       - setup_remote_docker
       - restore_cache:
           key: spanner-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-      - deploy
+      - deploy:
+          repo: "{{ .Environment.DOCKERHUB_REPO_SPANNER }}"
 
   deploy-python-utils:
     docker:
