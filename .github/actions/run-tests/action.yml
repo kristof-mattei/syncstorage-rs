@@ -1,0 +1,12 @@
+name: run-tests
+runs:
+  using: composite
+  steps:
+  - name: cargo test
+    run: cargo test --workspace --verbose
+    shell: bash
+  - name: quota test
+    run: cargo test --workspace --verbose
+    env:
+      SYNC_SYNCSTORAGE__ENFORCE_QUOTA: 1
+    shell: bash

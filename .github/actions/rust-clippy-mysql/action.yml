@@ -1,0 +1,7 @@
+name: rust-clippy-mysql
+runs:
+  using: composite
+  steps:
+  - name: Rust Clippy MySQL
+    run: cargo clippy --workspace --all-targets --no-default-features --features=syncstorage-db/mysql -- -D warnings
+    shell: bash

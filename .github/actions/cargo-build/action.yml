@@ -1,0 +1,7 @@
+name: cargo-build
+runs:
+  using: composite
+  steps:
+  - name: cargo build
+    run: cargo build
+    shell: bash

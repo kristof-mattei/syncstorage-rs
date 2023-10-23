@@ -3,7 +3,8 @@
 # DOCKERHUB_REPO - docker hub repo, format: <username>/<repo>
 # DOCKER_USER    - login info for docker hub
 # DOCKER_PASS
-#
+# UTILS_DOCKERHUB_REPO
+
 version: 2.1
 commands:
   display-rust:
@@ -361,7 +362,6 @@ jobs:
       - run:
           name: Build and deploy to Dockerhub
           command: |
-            export UTILS_DOCKERHUB_REPO=mozilla/sync-spanner-py-utils
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               DOCKER_TAG="latest"
             fi

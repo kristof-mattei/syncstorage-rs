@@ -1,0 +1,9 @@
+name: create-tokenserver-database
+runs:
+  using: composite
+  steps:
+  - name: Create Tokenserver database
+    run: |-
+      mysql -u root -ppassword -h 127.0.0.1 -e 'CREATE DATABASE tokenserver;'
+      mysql -u root -ppassword -h 127.0.0.1 -e "GRANT ALL ON tokenserver.* to 'test'@'%';"
+    shell: bash
