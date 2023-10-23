@@ -161,8 +161,8 @@ commands:
             - "~/.cache/sccache"
   deploy:
     parameters:
-      repo:
-        type: string
+      repo-env-name:
+        type: env_var_name
     steps:
       - run:
           name: Restore Docker image cache
@@ -170,7 +170,7 @@ commands:
       - run:
           name: Deploy to Dockerhub
           command: |
-            export DOCKERHUB_REPO=<<parameters.repo>>
+            export DOCKERHUB_REPO=<< parameters.repo-env-name >>
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               DOCKER_TAG="${CIRCLE_SHA1}"
             fi
@@ -355,7 +355,7 @@ jobs:
       - restore_cache:
           key: mysql-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
       - deploy:
-          repo: "{{ .Environment.DOCKERHUB_REPO_MYSQL }}"
+          repo-env-name: DOCKERHUB_REPO_MYSQL
 
   deploy-spanner:
     docker:
@@ -368,7 +368,7 @@ jobs:
       - restore_cache:
           key: spanner-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
       - deploy:
-          repo: "{{ .Environment.DOCKERHUB_REPO_SPANNER }}"
+          repo-env-name: DOCKERHUB_REPO_SPANNER
 
   deploy-python-utils:
     docker:
