@@ -1,0 +1,9 @@
+name: run-e2e-mysql-tests
+runs:
+  using: composite
+  steps:
+  - name: e2e tests (syncstorage mysql)
+    run: "/usr/local/bin/docker-compose -f docker-compose.mysql.yaml -f docker-compose.e2e.mysql.yaml up --exit-code-from mysql-e2e-tests --abort-on-container-exit"
+    env:
+      SYNCSTORAGE_RS_IMAGE: app:build
+    shell: bash
