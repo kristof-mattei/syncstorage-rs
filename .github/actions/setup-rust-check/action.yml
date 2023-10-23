@@ -1,0 +1,10 @@
+name: setup-rust-check
+runs:
+  using: composite
+  steps:
+  - name: Setup Rust checks
+    run: |-
+      rustup component add rustfmt
+      cargo install cargo-audit
+      rustup component add clippy
+    shell: bash
