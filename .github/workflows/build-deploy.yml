@@ -1,0 +1,229 @@
+name: kristof-mattei/syncstorage-rs/build-deploy
+on:
+  push:
+env:
+  DOCKERHUB_REPO: xxxxe-rs
+  DOCKER_PASS: xxxx3gOA
+  DOCKER_USER: xxxxttei
+  UTILS_DOCKERHUB_REPO: xxxxtils
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1.72.0
+      credentials:
+        username: "$DOCKER_USER"
+        password: "$DOCKER_PASS"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: "./.github/actions/display-rust"
+    - uses: "./.github/actions/setup-rust-check"
+    - uses: "./.github/actions/rust-check"
+    - uses: "./.github/actions/rust-clippy-spanner"
+    - uses: "./.github/actions/rust-clippy-mysql"
+    - uses: "./.github/actions/setup-python"
+    - uses: "./.github/actions/python-check"
+  build-and-test:
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1.72.0
+      credentials:
+        username: "$DOCKER_USER"
+        password: "$DOCKER_PASS"
+      env:
+        SYNC_SYNCSTORAGE__DATABASE_URL: mysql://test:test@127.0.0.1/syncstorage
+        SYNC_TOKENSERVER__DATABASE_URL: mysql://test:test@127.0.0.1/tokenserver
+        RUST_BACKTRACE: 1
+        RUST_TEST_THREADS: 1
+    services:
+      mysql:
+        image: circleci/mysql:5.7-ram
+        credentials:
+          username: "$DOCKER_USER"
+          password: "$DOCKER_PASS"
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+          MYSQL_DATABASE: syncstorage
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: "./.github/actions/display-rust"
+    - uses: "./.github/actions/setup-python"
+    - uses: "./.github/actions/setup-mysql"
+    - uses: "./.github/actions/create-tokenserver-database"
+    - uses: "./.github/actions/write-version"
+    - uses: "./.github/actions/cargo-build"
+    - uses: "./.github/actions/run-tests"
+    - uses: "./.github/actions/run-tokenserver-scripts-tests"
+  build-mysql-image:
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1.60.0
+      credentials:
+        username: "$DOCKER_USER"
+        password: "$DOCKER_PASS"
+    needs:
+    - build-and-test
+    steps:
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - uses: actions/checkout@v4.1.0
+    - uses: "./.github/actions/write-version"
+    - name: Build MySQL Docker image
+      run: docker build -t app:build --build-arg DATABASE_BACKEND=mysql .
+    - name: docker save app:build
+      run: |-
+        mkdir -p /home/circleci/cache
+        docker save -o /home/circleci/cache/docker.tar "app:build"
+    - name: Save docker-compose config
+      run: cp docker-compose*mysql.yaml /home/circleci/cache
+    - name: save_cache
+      uses: actions/cache@v3.3.2
+      with:
+        path: "/home/circleci/cache"
+        key: mysql-{{ .Branch }}-{{ .Environment.${{ github.sha }} }}-{{ epoch }}
+  build-spanner-image:
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1.60.0
+      credentials:
+        username: "$DOCKER_USER"
+        password: "$DOCKER_PASS"
+    needs:
+    - build-and-test
+    steps:
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - uses: actions/checkout@v4.1.0
+    - uses: "./.github/actions/write-version"
+    - name: Build Spanner Docker image
+      run: docker build -t app:build --build-arg DATABASE_BACKEND=spanner .
+    - name: docker save app:build
+      run: |-
+        mkdir -p /home/circleci/cache
+        docker save -o /home/circleci/cache/docker.tar "app:build"
+    - name: Save docker-compose config
+      run: cp docker-compose*spanner.yaml /home/circleci/cache
+    - name: save_cache
+      uses: actions/cache@v3.3.2
+      with:
+        path: "/home/circleci/cache"
+        key: spanner-{{ .Branch }}-{{ .Environment.${{ github.sha }} }}-{{ epoch }}
+  mysql-e2e-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: docker/compose:1.24.0
+      credentials:
+        username: "$DOCKER_USER"
+        password: "$DOCKER_PASS"
+    needs:
+    - build-mysql-image
+    steps:
+    - uses: actions/checkout@v4.1.0
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: restore_cache
+      uses: actions/cache@v3.3.2
+      with:
+        key: mysql-{{ .Branch }}-{{ .Environment.${{ github.sha }} }}
+        path: UPDATE_ME
+    - name: Restore Docker image cache
+      run: docker load -i /home/circleci/cache/docker.tar
+    - name: Restore docker-compose config
+      run: cp /home/circleci/cache/docker-compose*.yaml .
+    - uses: "./.github/actions/run-e2e-mysql-tests"
+  spanner-e2e-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: docker/compose:1.24.0
+      credentials:
+        username: "$DOCKER_USER"
+        password: "$DOCKER_PASS"
+    needs:
+    - build-spanner-image
+    steps:
+    - uses: actions/checkout@v4.1.0
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: restore_cache
+      uses: actions/cache@v3.3.2
+      with:
+        key: spanner-{{ .Branch }}-{{ .Environment.${{ github.sha }} }}
+        path: UPDATE_ME
+    - name: Restore Docker image cache
+      run: docker load -i /home/circleci/cache/docker.tar
+    - name: Restore docker-compose config
+      run: cp /home/circleci/cache/docker-compose*.yaml .
+    - uses: "./.github/actions/run-e2e-spanner-tests"
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    container:
+      image: docker:18.02.0-ce
+      credentials:
+        username: "$DOCKER_USER"
+        password: "$DOCKER_PASS"
+    needs:
+    - mysql-e2e-tests
+    - spanner-e2e-tests
+    steps:
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: restore_cache
+      uses: actions/cache@v3.3.2
+      with:
+        key: spanner-{{ .Branch }}-{{ .Environment.${{ github.sha }} }}
+        path: UPDATE_ME
+    - name: Restore Docker image cache
+      run: docker load -i /home/circleci/cache/docker.tar
+    - name: Deploy to Dockerhub
+      run: |-
+        if [ "${{ github.ref }}" == "master" ]; then
+          DOCKER_TAG="${{ github.sha }}"
+        fi
+        if echo "${{ github.ref }}" | grep '^feature\..*' > /dev/null; then
+          DOCKER_TAG="${{ github.ref }}"
+        fi
+        if [ -n "${{ github.ref }}" ]; then
+          DOCKER_TAG="${{ github.ref }}"
+        fi
+        if [ -n "${DOCKER_TAG}" ]; then
+          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+          echo ${DOCKERHUB_REPO}:${DOCKER_TAG}
+          docker tag app:build ${DOCKERHUB_REPO}:${DOCKER_TAG}
+          docker images
+          docker push "${DOCKERHUB_REPO}:${DOCKER_TAG}"
+        else
+          echo "Not pushing to dockerhub for tag=${{ github.ref }} branch=${{ github.ref }}"
+        fi
+  deploy-python-utils:
+    runs-on: ubuntu-latest
+    container:
+      image: docker:stable-git
+      credentials:
+        username: "$DOCKER_USER"
+        password: "$DOCKER_PASS"
+    needs:
+    - mysql-e2e-tests
+    - spanner-e2e-tests
+    steps:
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - uses: actions/checkout@v4.1.0
+    - uses: "./.github/actions/write-version"
+    - name: Build and deploy to Dockerhub
+      run: |-
+        if [ "${{ github.ref }}" == "master" ]; then
+          DOCKER_TAG="latest"
+        fi
+        if echo "${{ github.ref }}" | grep '^feature\..*' > /dev/null; then
+          DOCKER_TAG="${{ github.ref }}"
+        fi
+        if [ -n "${{ github.ref }}" ]; then
+          DOCKER_TAG="${{ github.ref }}"
+        fi
+        if [ -n "${DOCKER_TAG}" ]; then
+          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+          echo ${UTILS_DOCKERHUB_REPO}:${DOCKER_TAG}
+          cd tools/spanner
+          docker build -t ${UTILS_DOCKERHUB_REPO}:${DOCKER_TAG} .
+          docker images
+          docker push "${UTILS_DOCKERHUB_REPO}:${DOCKER_TAG}"
+        else
+          echo "Not building or pushing to dockerhub for tag=${{ github.ref }} branch=${{ github.ref }}"
+        fi
