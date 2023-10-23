@@ -161,9 +161,6 @@ commands:
             - "~/.cache/sccache"
   deploy:
     steps:
-      - setup_remote_docker
-      - restore_cache:
-          key: "{{ .Environment.CACHE_PREFIX }}-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}"
       - run:
           name: Restore Docker image cache
           command: docker load -i /home/circleci/cache/docker.tar
@@ -350,9 +347,11 @@ jobs:
           username: $DOCKER_USER
           password: $DOCKER_PASS
         environment:
-          CACHE_PREFIX: mysql
           DOCKERHUB_REPO: $DOCKERHUB_REPO_MYSQL
     steps:
+      - setup_remote_docker
+      - restore_cache:
+          key: mysql-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
       - deploy
 
   deploy-spanner:
@@ -362,9 +361,11 @@ jobs:
           username: $DOCKER_USER
           password: $DOCKER_PASS
         environment:
-          CACHE_PREFIX: spanner
           DOCKERHUB_REPO: $DOCKERHUB_REPO_SPANNER
     steps:
+      - setup_remote_docker
+      - restore_cache:
+          key: spanner-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
       - deploy
 
   deploy-python-utils:
