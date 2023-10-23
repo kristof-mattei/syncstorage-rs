@@ -347,7 +347,7 @@ jobs:
           username: $DOCKER_USER
           password: $DOCKER_PASS
         environment:
-          DOCKERHUB_REPO: $DOCKERHUB_REPO_MYSQL
+          DOCKERHUB_REPO: "{{ .Environment.DOCKERHUB_REPO_MYSQL }}"
     steps:
       - setup_remote_docker
       - restore_cache:
@@ -361,7 +361,7 @@ jobs:
           username: $DOCKER_USER
           password: $DOCKER_PASS
         environment:
-          DOCKERHUB_REPO: $DOCKERHUB_REPO_SPANNER
+          DOCKERHUB_REPO: "{{ .Environment.DOCKERHUB_REPO_SPANNER }}"
     steps:
       - setup_remote_docker
       - restore_cache:
