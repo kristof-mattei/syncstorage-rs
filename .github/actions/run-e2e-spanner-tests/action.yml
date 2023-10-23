@@ -1,0 +1,9 @@
+name: run-e2e-spanner-tests
+runs:
+  using: composite
+  steps:
+  - name: e2e tests (syncstorage spanner)
+    run: "/usr/local/bin/docker-compose -f docker-compose.spanner.yaml -f docker-compose.e2e.spanner.yaml up --exit-code-from spanner-e2e-tests --abort-on-container-exit"
+    env:
+      SYNCSTORAGE_RS_IMAGE: app:build
+    shell: bash
