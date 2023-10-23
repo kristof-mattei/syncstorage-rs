@@ -1,0 +1,7 @@
+name: rust-clippy-spanner
+runs:
+  using: composite
+  steps:
+  - name: Rust Clippy Spanner
+    run: cargo clippy --workspace --all-targets --no-default-features --features=syncstorage-db/spanner -- -D warnings
+    shell: bash
