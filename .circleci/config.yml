@@ -170,7 +170,7 @@ commands:
       - run:
           name: Deploy to Dockerhub
           command: |
-            export DOCKERHUB_REPO=<< parameters.repo-env-name >>
+            export DOCKERHUB_REPO=${<< parameters.repo-env-name >>}
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               DOCKER_TAG="${CIRCLE_SHA1}"
             fi
