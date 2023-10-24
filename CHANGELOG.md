@@ -1,3 +1,25 @@
+<a name="0.15.0"></a>
+## 0.15.0 (2023-10-24)
+
+
+#### Bug Fixes
+
+*   read docs and use env_var_name correctly with ${<< >>} ([5ff7fffd](https://github.com/mozilla-services/syncstorage-rs/commit/5ff7fffd0a59538ef2badc364b89140f1304dfa2))
+*   read docs and use env_var_name to pass in env vars to commands ([e83912f5](https://github.com/mozilla-services/syncstorage-rs/commit/e83912f5359a28137edb2d41f23bce7009069c6d))
+*   properly resolve env var ([8fedc23f](https://github.com/mozilla-services/syncstorage-rs/commit/8fedc23f282369e16fdfc9d42400643088dfad88))
+*   cache key doesn't support locally set env names, removing ([da45442a](https://github.com/mozilla-services/syncstorage-rs/commit/da45442a36d89f27b9cd99c0127581cb3aa6d74e))
+*   set correct env variable name ([20af1602](https://github.com/mozilla-services/syncstorage-rs/commit/20af16027dade2a2f7daa1105ff6d131b517bd67))
+
+#### Chore
+
+*   try parameters ([bb4819c7](https://github.com/mozilla-services/syncstorage-rs/commit/bb4819c7af93c41850d2f72e82e1ad34b0004b21))
+
+#### Features
+
+*   split docker images ([a85c3314](https://github.com/mozilla-services/syncstorage-rs/commit/a85c3314c03342a9af77f79d54316dde55e946f8))
+
+
+
 <a name="0.14.0"></a>
 ## 0.14.0 (2023-09-26)
 
