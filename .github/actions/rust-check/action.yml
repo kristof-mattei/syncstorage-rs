@@ -1,0 +1,9 @@
+name: rust-check
+runs:
+  using: composite
+  steps:
+  - name: Core Rust Checks
+    run: |-
+      cargo fmt -- --check
+      cargo audit
+    shell: bash
