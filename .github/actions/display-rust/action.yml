@@ -1,0 +1,7 @@
+name: display-rust
+runs:
+  using: composite
+  steps:
+  - name: Display Rust Version
+    run: rustc --version
+    shell: bash
