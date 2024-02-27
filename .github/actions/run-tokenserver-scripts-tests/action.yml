@@ -1,0 +1,9 @@
+name: run-tokenserver-scripts-tests
+runs:
+  using: composite
+  steps:
+  - name: Tokenserver scripts tests
+    run: pip3 install -r tools/tokenserver/requirements.txt && python3 tools/tokenserver/run_tests.py
+    env:
+      SYNCSTORAGE_RS_IMAGE: app:build
+    shell: bash

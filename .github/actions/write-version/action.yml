@@ -1,0 +1,14 @@
+name: write-version
+runs:
+  using: composite
+  steps:
+  - name: Create a version.json
+    run: |-
+      # create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
+      printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
+      "${{ github.sha }}" \
+      "${{ github.ref }}" \
+      "$CIRCLE_PROJECT_USERNAME" \
+      "${{ github.repository }}" \
+      "$CIRCLE_BUILD_URL" > syncserver/version.json
+    shell: bash
